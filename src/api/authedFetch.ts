@@ -1,10 +1,10 @@
 import { apiFetch } from "./httpClient";
-import { useAuth } from "@clerk/vue";
 
-export async function authedFetch<T>(path: string, init?: RequestInit) {
-  const { getToken } = useAuth();
-  const token = await getToken.value();
-
+export async function authedFetch<T>(
+  token: string,
+  path: string,
+  init?: RequestInit,
+) {
   return apiFetch<T>(path, {
     ...init,
     headers: {

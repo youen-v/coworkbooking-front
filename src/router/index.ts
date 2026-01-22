@@ -8,24 +8,7 @@ import PaymentSuccess from "../views/public/PaymentSuccess.vue";
 import PaymentCancel from "../views/public/PaymentCancel.vue";
 
 import ResourcesList from "../components/users/ResourcesList.vue";
-
 import CheckoutPage from "../views/private/user/CheckoutPage.vue";
-
-import { useAuth } from "@clerk/vue";
-import { useAuthStore } from "../stores/auth.store";
-
-function waitClerkLoaded() {
-  const { isLoaded } = useAuth();
-
-  return new Promise<void>((resolve) => {
-    const t = setInterval(() => {
-      if (isLoaded.value) {
-        clearInterval(t);
-        resolve();
-      }
-    }, 25);
-  });
-}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,7 +22,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
 
-    // Page avec accès public
+    // Public
     { path: "/rooms", component: PublicRooms, meta: { public: true } },
     { path: "/rooms/:id", component: PublicRoomDetail, meta: { public: true } },
     {
@@ -48,21 +31,19 @@ const router = createRouter({
       meta: { public: true },
     },
 
-    // Page avec accès utilisateur
+    // Private
     {
       path: "/checkout",
       component: CheckoutPage,
       meta: { requiresAuth: true },
     },
 
-    // Succés du paiement
+    // Payment
     {
       path: "/payment/success",
       component: PaymentSuccess,
       meta: { public: true },
     },
-
-    // Paiement annulé
     {
       path: "/payment/cancel",
       component: PaymentCancel,
@@ -72,25 +53,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-  // route public
   if (to.meta.public) return true;
-
-  await waitClerkLoaded();
-
-  // Check d'authentification
-  const { isSignedIn } = useAuth();
-  if (!isSignedIn.value) return "/login";
-
-  // Check des rôles
-  const authStore = useAuthStore();
-  if (!authStore.loaded) {
-    await authStore.fetchMe();
-  }
-
-  if (to.meta.requiresAdmin && authStore.role !== "ADMIN") {
-    return "/403";
-  }
-
   return true;
 });
 

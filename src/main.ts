@@ -11,9 +11,4 @@ app.use(clerkPlugin, {
   publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
 });
 app.use(router);
-console.log(
-  "Clerk Publishable Key:",
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-
 app.mount("#app");

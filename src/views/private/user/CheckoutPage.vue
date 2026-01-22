@@ -4,31 +4,42 @@
 
     <p v-if="state==='loading'">Redirection vers Stripe...</p>
     <p v-else-if="state==='error'" style="color:red">
-      Erreur : {{ error }}
+      {{ error }}
     </p>
   </main>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import { authedFetch } from "../../../api/authedFetch";
+import { useRoute, useRouter } from "vue-router";
+import { useAuth } from "@clerk/vue";
+import { createCheckoutSession } from "../../../api/payments.api";
 
 const route = useRoute();
+const router = useRouter();
+
 const reservationId = route.query.reservationId as string;
 
 const state = ref<"loading"|"error">("loading");
 const error = ref("");
 
+const { isLoaded, isSignedIn, getToken } = useAuth();
+
 onMounted(async () => {
   try {
-    const res = await authedFetch<{ data: { url: string } }>("/api/v1/payments/checkout-session", {
-      method: "POST",
-      body: JSON.stringify({ reservationId }),
-    });
+    if (!isLoaded.value) return;
 
+    if (!isSignedIn.value) {
+      router.push(`/login?redirectTo=${encodeURIComponent(route.fullPath)}`);
+      return;
+    }
+
+    const token = await getToken.value();
+    if (!token) throw new Error("Token Clerk manquant");
+
+    const res = await createCheckoutSession(token, reservationId);
     window.location.href = res.data.url;
-  } catch (e:any) {
+  } catch (e: any) {
     state.value = "error";
     error.value = e?.message || "Erreur checkout";
   }
