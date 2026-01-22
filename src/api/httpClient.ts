@@ -5,12 +5,31 @@ export async function apiFetch<T>(
   init?: RequestInit,
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
     ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
   });
 
-  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const text = await res.text();
 
-  if (!res.ok) throw json;
-  return json as T;
+    let payload: any = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { message: text };
+    }
+
+    const message =
+      payload?.message || payload?.error || `HTTP ${res.status} sur ${path}`;
+
+    const err: any = new Error(message);
+    err.status = res.status;
+    err.payload = payload;
+    throw err;
+  }
+
+  return res.json();
 }
