@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LandingPage from "../views/public/LandingPage.vue";
 import LoginPage from "../views/public/LoginPage.vue";
 import PublicRooms from "../views/public/PublicRooms.vue";
 import PublicRoomDetail from "../views/public/PublicRoomDetail.vue";
@@ -8,12 +7,13 @@ import PaymentSuccess from "../views/public/PaymentSuccess.vue";
 import PaymentCancel from "../views/public/PaymentCancel.vue";
 
 import ResourcesList from "../components/users/ResourcesList.vue";
+import MyReservations from "../views/public/MyReservations.vue";
 import CheckoutPage from "../views/private/user/CheckoutPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: LandingPage, meta: { public: true } },
+    { path: "/", component: PublicRooms, meta: { public: true } },
     { path: "/login", component: LoginPage, meta: { public: true } },
 
     {
@@ -48,6 +48,11 @@ const router = createRouter({
       path: "/payment/cancel",
       component: PaymentCancel,
       meta: { public: true },
+    },
+    {
+      path: "/reservations",
+      component: MyReservations,
+      meta: { requiresAuth: true },
     },
   ],
 });

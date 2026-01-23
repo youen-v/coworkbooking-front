@@ -1,11 +1,11 @@
-<script setup lang="ts">
-  import { RouterView } from 'vue-router';
-</script>
-
 <template>
+  <AppHeader />
   <RouterView />
 </template>
-
+<script setup lang="ts">
+  import AppHeader from "./components/layout/AppHeader.vue";
+  import { RouterView } from 'vue-router';
+</script>
 <style scoped>
 .logo {
   height: 6em;

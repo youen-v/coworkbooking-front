@@ -2,8 +2,6 @@
   <main style="max-width:900px;margin:0 auto;padding:16px">
     <header style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <h1>Salles disponibles</h1>
-
-      <RouterLink to="/login">Se connecter</RouterLink>
     </header>
 
     <p v-if="state === 'loading'">Chargement...</p>
