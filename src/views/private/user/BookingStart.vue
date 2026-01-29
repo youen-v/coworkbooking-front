@@ -38,7 +38,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@clerk/vue";
-import { createReservation } from "../../api/reservations.api";
+import { createReservation } from "../../../api/reservations.api";
 
 const route = useRoute();
 const router = useRouter();

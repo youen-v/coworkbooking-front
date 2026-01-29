@@ -1,44 +1,67 @@
 <template>
-  <main style="max-width:900px;margin:0 auto;padding:16px">
+  <main style="max-width: 900px; margin: 0 auto; padding: 16px">
     <h1>Mes réservations</h1>
 
     <p v-if="state === 'loading'">Chargement...</p>
 
-    <p v-else-if="state === 'error'" style="color:red">
-      ❌ {{ error }}
-    </p>
+    <p v-else-if="state === 'error'" style="color: red">❌ {{ error }}</p>
 
     <div v-else>
-      <p v-if="reservations.length === 0" style="opacity:.7">
+      <p v-if="reservations.length === 0" style="opacity: 0.7">
         Aucune réservation trouvée.
       </p>
 
-      <ul v-else style="display:grid;gap:12px;padding:0;list-style:none">
+      <ul v-else style="display: grid; gap: 12px; padding: 0; list-style: none">
         <li
           v-for="r in reservations"
           :key="r.id"
-          style="border:1px solid #ddd;border-radius:12px;padding:12px"
+          style="border: 1px solid #ddd; border-radius: 12px; padding: 12px"
         >
-          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              gap: 10px;
+              flex-wrap: wrap;
+            "
+          >
             <div>
-              <h3 style="margin:0">
+              <h3 style="margin: 0">
                 {{ r.resource?.name || "Ressource" }}
               </h3>
 
-              <p style="margin:6px 0;opacity:.8">
+              <p style="margin: 6px 0; opacity: 0.8">
                 {{ formatDate(r.startAt) }} → {{ formatDate(r.endAt) }}
               </p>
 
-              <p style="margin:6px 0">
+              <p style="margin: 6px 0">
                 <strong>Statut :</strong>
                 <span :style="badgeStyle(r.status)">{{ r.status }}</span>
               </p>
             </div>
 
-            <div v-if="r.status === 'PENDING_PAYMENT'" style="display:flex;align-items:center">
+            <div
+              v-if="r.status === 'PENDING_PAYMENT'"
+              style="display: flex; align-items: center"
+            >
               <RouterLink :to="`/checkout?reservationId=${r.id}`">
                 Payer maintenant →
               </RouterLink>
+            </div>
+            <div>
+              <RouterLink
+                v-if="r.status !== 'CANCELLED'"
+                :to="`/reservations/${r.id}/edit`"
+              >
+                Modifier →
+              </RouterLink>
+              <button
+                v-if="r.status !== 'CANCELLED'"
+                @click="cancel(r.id)"
+                style="cursor: pointer"
+              >
+                Annuler
+              </button>
             </div>
           </div>
         </li>
@@ -51,7 +74,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@clerk/vue";
-import { myReservations } from "../../api/reservations.api";
+import { myReservations, cancelReservation } from "../../../api/reservations.api";
 
 const router = useRouter();
 const route = useRoute();
@@ -76,8 +99,15 @@ function badgeStyle(status: string) {
   return "font-weight:700";
 }
 
+async function waitClerkLoaded() {
+  while (!isLoaded.value) {
+    await new Promise((r) => setTimeout(r, 25));
+  }
+}
+
 onMounted(async () => {
   try {
+    await waitClerkLoaded();
     state.value = "loading";
     error.value = "";
 
@@ -102,4 +132,19 @@ onMounted(async () => {
     error.value = e?.message || "Erreur inconnue";
   }
 });
+
+async function cancel(id: string) {
+  try {
+    const token = await getToken.value?.();
+    if (!token) throw new Error("Token manquant");
+
+    await cancelReservation(token, id);
+
+    // refresh list
+    const res = await myReservations(token);
+    reservations.value = res.data;
+  } catch (e: any) {
+    alert(e?.message || "Erreur annulation");
+  }
+}
 </script>
